@@ -356,9 +356,26 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
   late final GeneratedColumn<int> stock = GeneratedColumn<int>(
       'stock', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _tagMeta = const VerificationMeta('tag');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, description, price, category, images, colors, sizes, stock];
+  late final GeneratedColumn<String> tag = GeneratedColumn<String>(
+      'tag', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('New Arrivals'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        description,
+        price,
+        category,
+        images,
+        colors,
+        sizes,
+        stock,
+        tag
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -422,6 +439,10 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
     } else if (isInserting) {
       context.missing(_stockMeta);
     }
+    if (data.containsKey('tag')) {
+      context.handle(
+          _tagMeta, tag.isAcceptableOrUnknown(data['tag']!, _tagMeta));
+    }
     return context;
   }
 
@@ -449,6 +470,8 @@ class $ProductsTable extends Products with TableInfo<$ProductsTable, Product> {
           .read(DriftSqlType.string, data['${effectivePrefix}sizes'])!,
       stock: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}stock'])!,
+      tag: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tag'])!,
     );
   }
 
@@ -468,6 +491,7 @@ class Product extends DataClass implements Insertable<Product> {
   final String colors;
   final String sizes;
   final int stock;
+  final String tag;
   const Product(
       {required this.id,
       required this.name,
@@ -477,7 +501,8 @@ class Product extends DataClass implements Insertable<Product> {
       required this.images,
       required this.colors,
       required this.sizes,
-      required this.stock});
+      required this.stock,
+      required this.tag});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -490,6 +515,7 @@ class Product extends DataClass implements Insertable<Product> {
     map['colors'] = Variable<String>(colors);
     map['sizes'] = Variable<String>(sizes);
     map['stock'] = Variable<int>(stock);
+    map['tag'] = Variable<String>(tag);
     return map;
   }
 
@@ -504,6 +530,7 @@ class Product extends DataClass implements Insertable<Product> {
       colors: Value(colors),
       sizes: Value(sizes),
       stock: Value(stock),
+      tag: Value(tag),
     );
   }
 
@@ -520,6 +547,7 @@ class Product extends DataClass implements Insertable<Product> {
       colors: serializer.fromJson<String>(json['colors']),
       sizes: serializer.fromJson<String>(json['sizes']),
       stock: serializer.fromJson<int>(json['stock']),
+      tag: serializer.fromJson<String>(json['tag']),
     );
   }
   @override
@@ -535,6 +563,7 @@ class Product extends DataClass implements Insertable<Product> {
       'colors': serializer.toJson<String>(colors),
       'sizes': serializer.toJson<String>(sizes),
       'stock': serializer.toJson<int>(stock),
+      'tag': serializer.toJson<String>(tag),
     };
   }
 
@@ -547,7 +576,8 @@ class Product extends DataClass implements Insertable<Product> {
           String? images,
           String? colors,
           String? sizes,
-          int? stock}) =>
+          int? stock,
+          String? tag}) =>
       Product(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -558,6 +588,7 @@ class Product extends DataClass implements Insertable<Product> {
         colors: colors ?? this.colors,
         sizes: sizes ?? this.sizes,
         stock: stock ?? this.stock,
+        tag: tag ?? this.tag,
       );
   Product copyWithCompanion(ProductsCompanion data) {
     return Product(
@@ -571,6 +602,7 @@ class Product extends DataClass implements Insertable<Product> {
       colors: data.colors.present ? data.colors.value : this.colors,
       sizes: data.sizes.present ? data.sizes.value : this.sizes,
       stock: data.stock.present ? data.stock.value : this.stock,
+      tag: data.tag.present ? data.tag.value : this.tag,
     );
   }
 
@@ -585,14 +617,15 @@ class Product extends DataClass implements Insertable<Product> {
           ..write('images: $images, ')
           ..write('colors: $colors, ')
           ..write('sizes: $sizes, ')
-          ..write('stock: $stock')
+          ..write('stock: $stock, ')
+          ..write('tag: $tag')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, name, description, price, category, images, colors, sizes, stock);
+  int get hashCode => Object.hash(id, name, description, price, category,
+      images, colors, sizes, stock, tag);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -605,7 +638,8 @@ class Product extends DataClass implements Insertable<Product> {
           other.images == this.images &&
           other.colors == this.colors &&
           other.sizes == this.sizes &&
-          other.stock == this.stock);
+          other.stock == this.stock &&
+          other.tag == this.tag);
 }
 
 class ProductsCompanion extends UpdateCompanion<Product> {
@@ -618,6 +652,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
   final Value<String> colors;
   final Value<String> sizes;
   final Value<int> stock;
+  final Value<String> tag;
   const ProductsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -628,6 +663,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     this.colors = const Value.absent(),
     this.sizes = const Value.absent(),
     this.stock = const Value.absent(),
+    this.tag = const Value.absent(),
   });
   ProductsCompanion.insert({
     this.id = const Value.absent(),
@@ -639,6 +675,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     required String colors,
     required String sizes,
     required int stock,
+    this.tag = const Value.absent(),
   })  : name = Value(name),
         description = Value(description),
         price = Value(price),
@@ -657,6 +694,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     Expression<String>? colors,
     Expression<String>? sizes,
     Expression<int>? stock,
+    Expression<String>? tag,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -668,6 +706,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       if (colors != null) 'colors': colors,
       if (sizes != null) 'sizes': sizes,
       if (stock != null) 'stock': stock,
+      if (tag != null) 'tag': tag,
     });
   }
 
@@ -680,7 +719,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       Value<String>? images,
       Value<String>? colors,
       Value<String>? sizes,
-      Value<int>? stock}) {
+      Value<int>? stock,
+      Value<String>? tag}) {
     return ProductsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -691,6 +731,7 @@ class ProductsCompanion extends UpdateCompanion<Product> {
       colors: colors ?? this.colors,
       sizes: sizes ?? this.sizes,
       stock: stock ?? this.stock,
+      tag: tag ?? this.tag,
     );
   }
 
@@ -724,6 +765,9 @@ class ProductsCompanion extends UpdateCompanion<Product> {
     if (stock.present) {
       map['stock'] = Variable<int>(stock.value);
     }
+    if (tag.present) {
+      map['tag'] = Variable<String>(tag.value);
+    }
     return map;
   }
 
@@ -738,7 +782,8 @@ class ProductsCompanion extends UpdateCompanion<Product> {
           ..write('images: $images, ')
           ..write('colors: $colors, ')
           ..write('sizes: $sizes, ')
-          ..write('stock: $stock')
+          ..write('stock: $stock, ')
+          ..write('tag: $tag')
           ..write(')'))
         .toString();
   }
@@ -1744,6 +1789,7 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   required String colors,
   required String sizes,
   required int stock,
+  Value<String> tag,
 });
 typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<int> id,
@@ -1755,6 +1801,7 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<String> colors,
   Value<String> sizes,
   Value<int> stock,
+  Value<String> tag,
 });
 
 class $$ProductsTableFilterComposer
@@ -1792,6 +1839,9 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<int> get stock => $composableBuilder(
       column: $table.stock, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tag => $composableBuilder(
+      column: $table.tag, builder: (column) => ColumnFilters(column));
 }
 
 class $$ProductsTableOrderingComposer
@@ -1829,6 +1879,9 @@ class $$ProductsTableOrderingComposer
 
   ColumnOrderings<int> get stock => $composableBuilder(
       column: $table.stock, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tag => $composableBuilder(
+      column: $table.tag, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ProductsTableAnnotationComposer
@@ -1866,6 +1919,9 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<int> get stock =>
       $composableBuilder(column: $table.stock, builder: (column) => column);
+
+  GeneratedColumn<String> get tag =>
+      $composableBuilder(column: $table.tag, builder: (column) => column);
 }
 
 class $$ProductsTableTableManager extends RootTableManager<
@@ -1900,6 +1956,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<String> colors = const Value.absent(),
             Value<String> sizes = const Value.absent(),
             Value<int> stock = const Value.absent(),
+            Value<String> tag = const Value.absent(),
           }) =>
               ProductsCompanion(
             id: id,
@@ -1911,6 +1968,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             colors: colors,
             sizes: sizes,
             stock: stock,
+            tag: tag,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -1922,6 +1980,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             required String colors,
             required String sizes,
             required int stock,
+            Value<String> tag = const Value.absent(),
           }) =>
               ProductsCompanion.insert(
             id: id,
@@ -1933,6 +1992,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             colors: colors,
             sizes: sizes,
             stock: stock,
+            tag: tag,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

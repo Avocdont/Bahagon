@@ -19,7 +19,6 @@ class _AdminScreenState extends State<AdminScreen> {
   List<Product> products = [];
   final ImagePicker _picker = ImagePicker();
 
-  // UPDATED: Removed 'All' from this list
   final List<String> _categories = [
     'Caps',
     'Shoes',
@@ -31,6 +30,14 @@ class _AdminScreenState extends State<AdminScreen> {
     'Socks',
     'Shades',
     'Watches'
+  ];
+
+  final List<String> _tags = [
+    'New Arrivals',
+    'Flash Deals',
+    'Just For You',
+    'Best Rated',
+    'Hot Picks'
   ];
 
   @override
@@ -87,6 +94,11 @@ class _AdminScreenState extends State<AdminScreen> {
     String selectedCategory = product?.category ?? 'Caps';
     if (!_categories.contains(selectedCategory)) selectedCategory = 'Caps';
 
+    // Ensure selected tag is valid (default to 'New Arrivals')
+    String selectedProductTag = product?.tag ?? 'New Arrivals';
+    if (!_tags.contains(selectedProductTag))
+      selectedProductTag = 'New Arrivals';
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(builder: (context, setStateDialog) {
@@ -101,20 +113,19 @@ class _AdminScreenState extends State<AdminScreen> {
         }
 
         return AlertDialog(
-          // Use standard padding
           insetPadding: EdgeInsets.all(20),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(isEditing ? 'Edit Product' : 'Add Product',
               style: TextStyle(fontWeight: FontWeight.bold)),
           content: Container(
-            // UPDATED: Constrain width to 400
             constraints: BoxConstraints(maxWidth: 600),
             width: double.maxFinite,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Image Picker
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
@@ -131,7 +142,9 @@ class _AdminScreenState extends State<AdminScreen> {
                               children: [
                                 Icon(Icons.add_a_photo,
                                     size: 40, color: Colors.grey),
-                                Text('Tap to pick image'),
+                                SizedBox(height: 8),
+                                Text('Tap to pick image',
+                                    style: TextStyle(color: Colors.grey[600])),
                               ],
                             )
                           : ClipRRect(
@@ -141,32 +154,44 @@ class _AdminScreenState extends State<AdminScreen> {
                     ),
                   ),
                   SizedBox(height: 16),
+
+                  // Product Name
                   TextField(
                       controller: nameController,
                       decoration: InputDecoration(
                           labelText: 'Product Name',
-                          border: OutlineInputBorder())),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)))),
                   SizedBox(height: 12),
+
+                  // Description
                   TextField(
                       controller: descController,
                       decoration: InputDecoration(
                           labelText: 'Description',
-                          border: OutlineInputBorder()),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12))),
                       maxLines: 3),
                   SizedBox(height: 12),
+
+                  // Price
                   TextField(
                       controller: priceController,
                       decoration: InputDecoration(
-                          labelText: 'Price', border: OutlineInputBorder()),
+                          labelText: 'Price',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12))),
                       keyboardType:
                           TextInputType.numberWithOptions(decimal: true)),
                   SizedBox(height: 12),
 
-                  // Dropdown with "All" removed
+                  // Category Dropdown
                   DropdownButtonFormField<String>(
                     value: selectedCategory,
                     decoration: InputDecoration(
-                        labelText: 'Category', border: OutlineInputBorder()),
+                        labelText: 'Category',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12))),
                     items: _categories.map((String category) {
                       return DropdownMenuItem<String>(
                           value: category, child: Text(category));
@@ -177,22 +202,52 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
 
                   SizedBox(height: 12),
+
+                  // Tag Dropdown
+                  DropdownButtonFormField<String>(
+                    value: selectedProductTag,
+                    decoration: InputDecoration(
+                        labelText: 'Tag',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    items: _tags.map((String tag) {
+                      return DropdownMenuItem<String>(
+                          value: tag, child: Text(tag));
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setStateDialog(() => selectedProductTag = newValue!);
+                    },
+                  ),
+
+                  SizedBox(height: 12),
+
+                  // Colors
                   TextField(
                       controller: colorsController,
                       decoration: InputDecoration(
                           labelText: 'Colors (comma separated)',
-                          border: OutlineInputBorder())),
+                          hintText: 'e.g. Red, Blue, Green',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)))),
                   SizedBox(height: 12),
+
+                  // Sizes
                   TextField(
                       controller: sizesController,
                       decoration: InputDecoration(
                           labelText: 'Sizes (comma separated)',
-                          border: OutlineInputBorder())),
+                          hintText: 'e.g. S, M, L, XL',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)))),
                   SizedBox(height: 12),
+
+                  // Stock
                   TextField(
                       controller: stockController,
                       decoration: InputDecoration(
-                          labelText: 'Stock', border: OutlineInputBorder()),
+                          labelText: 'Stock',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12))),
                       keyboardType: TextInputType.number),
                 ],
               ),
@@ -204,9 +259,16 @@ class _AdminScreenState extends State<AdminScreen> {
                 child: Text('Cancel', style: TextStyle(color: Colors.grey))),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isEmpty || priceController.text.isEmpty)
+                // Validation
+                if (nameController.text.isEmpty ||
+                    priceController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Please fill all required fields')),
+                  );
                   return;
+                }
 
+                // Parse colors and sizes
                 final colors = colorsController.text
                     .split(',')
                     .map((e) => '"${e.trim()}"')
@@ -216,42 +278,55 @@ class _AdminScreenState extends State<AdminScreen> {
                     .map((e) => '"${e.trim()}"')
                     .toList();
 
-                final prodData = isEditing
-                    ? product.copyWith(
-                        name: nameController.text,
-                        description: descController.text,
-                        price: double.tryParse(priceController.text) ?? 0,
-                        category: selectedCategory,
-                        images: '["$currentImagePath"]',
-                        colors: '[${colors.join(",")}]',
-                        sizes: '[${sizes.join(",")}]',
-                        stock: int.tryParse(stockController.text) ?? 0,
-                      )
-                    : ProductsCompanion.insert(
-                        name: nameController.text,
-                        description: descController.text,
-                        price: double.tryParse(priceController.text) ?? 0,
-                        category: selectedCategory,
-                        images: '["$currentImagePath"]',
-                        colors: '[${colors.join(",")}]',
-                        sizes: '[${sizes.join(",")}]',
-                        stock: int.tryParse(stockController.text) ?? 0,
-                      );
-
+                // Create or update product
                 if (isEditing) {
-                  await widget.database.updateProduct(prodData as Product);
+                  // Update existing product
+                  final updatedProduct = product.copyWith(
+                    name: nameController.text,
+                    description: descController.text,
+                    price: double.tryParse(priceController.text) ?? 0,
+                    category: selectedCategory,
+                    tag: selectedProductTag,
+                    images: '["$currentImagePath"]',
+                    colors: '[${colors.join(",")}]',
+                    sizes: '[${sizes.join(",")}]',
+                    stock: int.tryParse(stockController.text) ?? 0,
+                  );
+                  await widget.database.updateProduct(updatedProduct);
                 } else {
-                  await widget.database
-                      .insertProduct(prodData as ProductsCompanion);
+                  // Insert new product
+                  await widget.database.insertProduct(
+                    ProductsCompanion.insert(
+                      name: nameController.text,
+                      description: descController.text,
+                      price: double.tryParse(priceController.text) ?? 0,
+                      category: selectedCategory,
+                      tag: drift.Value(selectedProductTag),
+                      images: '["$currentImagePath"]',
+                      colors: '[${colors.join(",")}]',
+                      sizes: '[${sizes.join(",")}]',
+                      stock: int.tryParse(stockController.text) ?? 0,
+                    ),
+                  );
                 }
 
                 Navigator.pop(context);
                 _loadProducts();
                 widget.onProductsChanged();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(isEditing
+                          ? 'Product updated successfully'
+                          : 'Product added successfully')),
+                );
               },
               child: Text(isEditing ? 'Update' : 'Add'),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black, foregroundColor: Colors.white),
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12))),
             ),
           ],
         );
@@ -263,6 +338,7 @@ class _AdminScreenState extends State<AdminScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Delete Product'),
         content: Text('Are you sure you want to delete "${product.name}"?'),
         actions: [
@@ -273,7 +349,10 @@ class _AdminScreenState extends State<AdminScreen> {
             onPressed: () => Navigator.pop(context, true),
             child: Text('Delete'),
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, foregroundColor: Colors.white),
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12))),
           ),
         ],
       ),
@@ -283,6 +362,9 @@ class _AdminScreenState extends State<AdminScreen> {
       await widget.database.deleteProduct(product.id);
       _loadProducts();
       widget.onProductsChanged();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Product deleted successfully')),
+      );
     }
   }
 
@@ -295,6 +377,7 @@ class _AdminScreenState extends State<AdminScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
+            tooltip: 'Logout',
             onPressed: () {
               Navigator.pushReplacement(
                   context,
@@ -306,7 +389,25 @@ class _AdminScreenState extends State<AdminScreen> {
         ],
       ),
       body: products.isEmpty
-          ? Center(child: Text('No products'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inventory_2_outlined,
+                      size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No products yet',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Tap + to add your first product',
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
           : ListView.builder(
               padding: EdgeInsets.all(16),
               itemCount: products.length,
@@ -319,6 +420,9 @@ class _AdminScreenState extends State<AdminScreen> {
 
                 return Card(
                   margin: EdgeInsets.only(bottom: 16),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
                     contentPadding: EdgeInsets.all(12),
                     leading: Container(
@@ -334,16 +438,42 @@ class _AdminScreenState extends State<AdminScreen> {
                     ),
                     title: Text(product.name,
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('\$${product.price}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 4),
+                        Text('\₱${product.price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 6),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            product.tag,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
                             icon: Icon(Icons.edit, color: Colors.blue),
+                            tooltip: 'Edit',
                             onPressed: () =>
                                 _showAddEditDialog(product: product)),
                         IconButton(
                             icon: Icon(Icons.delete, color: Colors.red),
+                            tooltip: 'Delete',
                             onPressed: () => _deleteProduct(product)),
                       ],
                     ),
@@ -352,10 +482,14 @@ class _AdminScreenState extends State<AdminScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditDialog(),
+        onPressed: () {
+          print('Add button pressed'); // Debug line
+          _showAddEditDialog();
+        },
         child: Icon(Icons.add),
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
+        tooltip: 'Add Product',
       ),
     );
   }

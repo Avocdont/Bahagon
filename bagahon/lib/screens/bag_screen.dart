@@ -63,9 +63,9 @@ class _BagScreenState extends State<BagScreen> {
     await widget.database.deleteBagItem(bagItem.id);
     setState(() {
       selectedItems.remove(bagItem.id);
-      bagItems.remove(bagItem); // Update local list immediately for smooth UI
+      bagItems.remove(bagItem);
     });
-    _loadBagItems(); // Reload to ensure sync
+    _loadBagItems();
   }
 
   Future<void> _checkout() async {
@@ -116,7 +116,24 @@ class _BagScreenState extends State<BagScreen> {
       appBar: AppBar(
           title: Text('Bag', style: TextStyle(fontWeight: FontWeight.bold))),
       body: bagItems.isEmpty
-          ? Center(child: Text('Your bag is empty'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_bag_outlined,
+                      size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'Your bag is empty',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : Column(
               children: [
                 Expanded(
@@ -134,7 +151,6 @@ class _BagScreenState extends State<BagScreen> {
                           .replaceAll(']', '')
                           .replaceAll('"', '');
 
-                      // WRAPPED IN DISMISSIBLE FOR SWIPE-TO-DELETE
                       return Dismissible(
                         key: Key(bagItem.id.toString()),
                         direction: DismissDirection.endToStart,
@@ -199,14 +215,14 @@ class _BagScreenState extends State<BagScreen> {
                                           'Color: ${bagItem.selectedColor}, Size: ${bagItem.selectedSize}'),
                                       Text('Qty: ${bagItem.quantity}'),
                                       Text(
-                                          '\$${product.price.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16)),
+                                        '\₱${product.price.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                // MANUAL DELETE BUTTON
                                 IconButton(
                                   icon: Icon(Icons.delete_outline,
                                       color: Colors.red),
@@ -223,9 +239,12 @@ class _BagScreenState extends State<BagScreen> {
                 if (selectedItems.isNotEmpty)
                   Container(
                     padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(color: Colors.white, boxShadow: [
-                      BoxShadow(color: Colors.black12, blurRadius: 8)
-                    ]),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 8)
+                      ],
+                    ),
                     child: Column(
                       children: [
                         Row(
@@ -233,13 +252,13 @@ class _BagScreenState extends State<BagScreen> {
                             children: [
                               Text('Subtotal:'),
                               Text(
-                                  '\$${_calculateSubtotal().toStringAsFixed(2)}')
+                                  '\₱${_calculateSubtotal().toStringAsFixed(2)}')
                             ]),
                         Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Shipping:'),
-                              Text('\$${shippingCost.toStringAsFixed(2)}')
+                              Text('\₱${shippingCost.toStringAsFixed(2)}')
                             ]),
                         Divider(),
                         Row(
@@ -248,7 +267,7 @@ class _BagScreenState extends State<BagScreen> {
                               Text('Total:',
                                   style:
                                       TextStyle(fontWeight: FontWeight.bold)),
-                              Text('\$${_calculateTotal().toStringAsFixed(2)}',
+                              Text('\₱${_calculateTotal().toStringAsFixed(2)}',
                                   style: TextStyle(fontWeight: FontWeight.bold))
                             ]),
                         SizedBox(height: 16),

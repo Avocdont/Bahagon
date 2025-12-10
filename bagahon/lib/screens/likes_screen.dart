@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../database/database.dart';
-import '../widgets/product_details_sheet.dart'; // Import the details sheet
+import '../widgets/product_details_sheet.dart';
 
 class LikesScreen extends StatefulWidget {
   final AppDatabase database;
@@ -31,7 +31,6 @@ class _LikesScreenState extends State<LikesScreen> {
     });
   }
 
-  // Helper to show the details popup
   void _showProductDetails(Product product) {
     showModalBottomSheet(
       context: context,
@@ -41,7 +40,7 @@ class _LikesScreenState extends State<LikesScreen> {
         product: product,
         database: widget.database,
         onAddedToBag: () {
-          // Optional: Refresh logic if needed, or just close
+          // optional refresh logic
         },
       ),
     );
@@ -64,7 +63,23 @@ class _LikesScreenState extends State<LikesScreen> {
       appBar: AppBar(
           title: Text('Likes', style: TextStyle(fontWeight: FontWeight.bold))),
       body: likedProducts.isEmpty
-          ? Center(child: Text('No liked products yet'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.favorite_border, size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No liked products yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            )
           : ListView.builder(
               padding: EdgeInsets.all(16),
               itemCount: likedProducts.length,
@@ -78,15 +93,15 @@ class _LikesScreenState extends State<LikesScreen> {
                 return Card(
                   margin: EdgeInsets.only(bottom: 16),
                   child: ListTile(
-                    onTap: () =>
-                        _showProductDetails(product), // Added onTap here
+                    onTap: () => _showProductDetails(product),
                     contentPadding: EdgeInsets.all(12),
                     leading: Container(
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8)),
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: _buildImage(imagePath),
@@ -94,7 +109,7 @@ class _LikesScreenState extends State<LikesScreen> {
                     ),
                     title: Text(product.name,
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
+                    subtitle: Text('\₱${product.price.toStringAsFixed(2)}'),
                     trailing: IconButton(
                       icon: Icon(Icons.favorite, color: Colors.red),
                       onPressed: () async {

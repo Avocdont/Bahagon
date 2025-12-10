@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import '../database/database.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -22,144 +22,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   Future<void> _loadTransactions() async {
     final loadedTransactions = await widget.database.getAllTransactions();
-    setState(() => transactions = loadedTransactions);
+    setState(() {
+      transactions = loadedTransactions;
+    });
   }
 
   void _showTransactionDetails(Transaction transaction) {
-    final items = jsonDecode(transaction.items) as List;
+    // TODO: Implement details modal or navigation
+  }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              margin: EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Transaction Details',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Date: ${transaction.date.toString().split('.')[0]}',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  SizedBox(height: 4),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.green[100],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      transaction.status,
-                      style: TextStyle(
-                        color: Colors.green[800],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Divider(),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(24),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 12),
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item['name'],
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Color: ${item['color']}'),
-                                  Text('Size: ${item['size']}'),
-                                  Text('Qty: ${item['quantity']}'),
-                                ],
-                              ),
-                              Text(
-                                '${(item['price'] * item['quantity']).toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 8,
-                    offset: Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '\${transaction.total.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  String formatPrice(double value) {
+    return '₱${value.toStringAsFixed(2)}';
   }
 
   @override
@@ -200,6 +73,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Header row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -231,11 +105,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ],
                           ),
                           SizedBox(height: 8),
+
+                          // Items count
                           Text(
                             '${items.length} item${items.length > 1 ? 's' : ''}',
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                           SizedBox(height: 4),
+
+                          // Date
                           Text(
                             transaction.date.toString().split('.')[0],
                             style: TextStyle(
@@ -244,6 +122,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                             ),
                           ),
                           SizedBox(height: 12),
+
+                          // Total row
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -255,7 +135,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                                 ),
                               ),
                               Text(
-                                '\${transaction.total.toStringAsFixed(2)}',
+                                formatPrice(transaction.total), // ✅ fixed
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,

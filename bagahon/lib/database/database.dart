@@ -25,6 +25,8 @@ class Products extends Table {
   TextColumn get colors => text()();
   TextColumn get sizes => text()();
   IntColumn get stock => integer()();
+  TextColumn get tag =>
+      text().withDefault(const Constant('New Arrivals'))(); // ADD THIS LINE
 }
 
 class Likes extends Table {
@@ -54,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 2; // CHANGE THIS FROM 1 TO 2
 
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
@@ -63,6 +65,24 @@ class AppDatabase extends _$AppDatabase {
       return NativeDatabase(file);
     });
   }
+
+  // --- MIGRATION STRATEGY ---
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll(); // Creates all tables
+        },
+        onUpgrade: (m, from, to) async {
+          // Migrate from version 1 to 2
+          if (from == 1 && to == 2) {
+            // Add the tag column to products table
+            await m.addColumn(products, products.tag);
+          }
+        },
+        beforeOpen: (details) async {
+          // Optional: any logic to run before opening database
+        },
+      );
 
   // --- SEED ADMIN METHOD (Silent) ---
   Future<void> seedDefaultAdmin() async {
@@ -78,7 +98,6 @@ class AppDatabase extends _$AppDatabase {
           email: const Value('admin@store.com'),
         ),
       );
-      // Print statement removed
     }
   }
 

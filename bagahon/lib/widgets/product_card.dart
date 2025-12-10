@@ -40,7 +40,9 @@ class _ProductCardState extends State<ProductCard> {
     } else {
       await widget.database.insertLike(
         LikesCompanion.insert(
-            productId: widget.product.id, likedAt: DateTime.now()),
+          productId: widget.product.id,
+          likedAt: DateTime.now(),
+        ),
       );
     }
     setState(() => isLiked = !isLiked);
@@ -48,16 +50,25 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   Widget _buildImage(String imagePath) {
-    if (imagePath.isEmpty)
+    if (imagePath.isEmpty) {
       return Center(child: Icon(Icons.image, size: 50, color: Colors.grey));
+    }
     if (imagePath.startsWith('http')) {
-      return Image.network(imagePath,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Center(child: Icon(Icons.error)));
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => Center(child: Icon(Icons.error)),
+      );
     } else {
-      return Image.file(File(imagePath),
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Center(child: Icon(Icons.error)));
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => Center(child: Icon(Icons.error)),
+      );
     }
   }
 
@@ -68,79 +79,99 @@ class _ProductCardState extends State<ProductCard> {
         .replaceAll(']', '')
         .replaceAll('"', '');
 
-    return Card(
-      margin: EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
+    return Stack(
+      children: [
+        Card(
+          elevation: 2,
+          margin: EdgeInsets.only(bottom: 16),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 300,
+                // Image Section
+                SizedBox(
+                  height: 200,
                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
-                    color: Colors.grey[300],
-                  ),
                   child: ClipRRect(
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
+                        BorderRadius.vertical(top: Radius.circular(12)),
                     child: _buildImage(imagePath),
                   ),
                 ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          color: isLiked ? Colors.red : Colors.black),
-                      onPressed: _toggleLike,
-                    ),
+
+                // Product Info
+                Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.product.name,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4),
+                      widget.product.stock > 0
+                          ? Text(
+                              '₱${widget.product.price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : Text(
+                              'Out of Stock',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                    ],
                   ),
                 ),
               ],
             ),
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.product.name,
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  // FIX IS HERE: safer string interpolation for the price
-                  Text(
-                    '\$${widget.product.price.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: widget.onTap,
-                    icon: Icon(Icons.shopping_bag_outlined),
-                    label: Text('Add to Bag'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      foregroundColor: Colors.white,
-                      minimumSize: Size(double.infinity, 48),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+
+        // Heart Icon Overlay
+        Positioned(
+          top: 12,
+          right: 12,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                isLiked ? Icons.favorite : Icons.favorite_border,
+                color: isLiked ? Colors.red : Colors.black,
+                size: 20,
+              ),
+              onPressed: _toggleLike,
+              padding: EdgeInsets.all(8),
+              constraints: BoxConstraints(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
